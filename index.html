@@ -1,0 +1,142 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Образец базы данных Web SQL</title>
+  <script>
+      //Открываем или создаем базу данных
+      var db = openDatabase('biology', '1.0', 'Молекулярная биология', 5 * 1024 * 1024);
+
+
+      //Удаляем базу данных
+      db.transaction(function (tx) {
+          // tx.executeSql('DROP TABLE IF EXISTS Molecules');
+      });
+
+      //Инициализируем базу данных
+      db.transaction(function (tx) {
+          tx.executeSql('CREATE TABLE IF NOT EXISTS Molecules(id integer primary key autoincrement, molname, moldescription, molfunction)');
+      });
+
+      function AddMolecule() {
+          var inputMoleculeName = document.getElementById("molname").value;
+          var inputMoleculeDescription = document.getElementById("moldescription").value;
+          var inputMoleculeFunction = document.getElementById("molfunction").value;
+
+          db.transaction(function (tx) {
+              tx.executeSql('INSERT INTO Molecules(molname,moldescription,molfunction) VALUES (?,?,?)', [inputMoleculeName, inputMoleculeDescription, inputMoleculeFunction], function (tx, results) {
+                  //Создаем строку и ее ячейки
+                  var MoleculeRaw = document.createElement("tr");
+                  var id = document.createElement("td");
+                  var molname = document.createElement("td");
+                  var moldescription = document.createElement("td");
+                  var molfunction = document.createElement("td");
+                  var removeButton = document.createElement("td");
+                  //Устанавливаем величины, получаемые из базы данных
+                  id.textContent = results.insertId;
+                  molname.textContent = inputMoleculeName;
+                  moldescription.textContent = inputMoleculeDescription;
+                  molfunction.textContent = inputMoleculeFunction;
+                  removeButton.innerHTML = '<button onclick="RemoveMolecule(' + results.insertId + ')">Удалить!</button>';
+                  //Добавляем ячейки в строку
+                  MoleculeRaw.setAttribute("id", "c" + results.insertId);
+                  MoleculeRaw.appendChild(id);
+                  MoleculeRaw.appendChild(molname);
+                  MoleculeRaw.appendChild(moldescription);
+                  MoleculeRaw.appendChild(molfunction);
+                  MoleculeRaw.appendChild(removeButton);
+                  //Добавляем строку в таблицу
+                  document.getElementById("Molecules").appendChild(MoleculeRaw);
+              });
+          });
+      }
+
+      function RemoveMolecule(id) {
+          db.transaction(function (tx) {
+              tx.executeSql('DELETE FROM Molecules WHERE id=?', [id], function () {
+                  //Динамически удаляем молекулы из таблицы
+                  var MoleculeTable = document.getElementById("Molecules");
+                  var MoleculeToDelete = document.getElementById("c" + id);
+                  MoleculeTable.removeChild(MoleculeToDelete);
+              });
+          });
+      }
+
+      function ListOfMolecules() {
+          db.transaction(function (tx) {
+              tx.executeSql('SELECT * FROM Molecules', [], function (tx, results) {
+                  var len = results.rows.length;
+                  var i;
+                  for (i = 0; i < len; i++) {
+                      //Создаем строку и ее ячейки
+                      var MoleculeRaw = document.createElement("tr");
+
+                      var molid = document.createElement("td");
+
+                      var molname = document.createElement("td");
+                      var moldescription = document.createElement("td");
+                      var molfunction = document.createElement("td");
+                      var removeButton = document.createElement("td");
+                      //Устанавливаем значения, полученные из базы данных
+
+                      molid.textContent = results.rows.item(i).id;
+
+                      molname.textContent = results.rows.item(i).molname;
+                      moldescription.textContent = results.rows.item(i).moldescription;
+                      molfunction.textContent = results.rows.item(i).molfunction;
+                      removeButton.innerHTML = '<button onclick="RemoveMolecule(' + results.rows.item(i).id + ')">Удалить!</button>';
+                      //Добавляем ячейки в строку
+                      MoleculeRaw.setAttribute("id", "c" + results.rows.item(i).id);
+
+                      MoleculeRaw.appendChild(molid);
+
+                      MoleculeRaw.appendChild(molname);
+                      MoleculeRaw.appendChild(moldescription);
+                      MoleculeRaw.appendChild(molfunction);
+                      MoleculeRaw.appendChild(removeButton);
+                      //Добавляем строку в таблицу
+                      document.getElementById("Molecules").appendChild(MoleculeRaw);
+                  }
+              });
+          });
+      }
+
+      window.addEventListener("load", ListOfMolecules, true);
+  </script>
+</head>
+<body>
+  <div id="container">
+    <section id="input">
+      <h1>Добавить волейболиста</h1>
+
+       <table border="1" cellspacing="0">
+           <tr>
+               <td>Имя волейболиста:</td>
+               <td><input type="text" id="molname" /></td>
+           </tr>
+           <tr>
+               <td>Номер волейболиста:</td>
+               <td><input type="text" id="moldescription" /></td>
+           </tr>
+           <tr>
+               <td>Амплуа волейболиста:</td>
+               <td><input type="text"  id="molfunction" /></td>
+           </tr>
+       </table>
+        <br />
+
+    <button onclick="AddMolecule()">Добавить волейболиста!</button>
+    </section>
+    <section id="output">
+      <h1>Просмотр списка волейболистов</h1>
+      <table id="Molecules" border="1" cellspacing="0">
+        <td>Id</td>
+        <td>Имя волейболиста:</td>
+        <td>Амплуа волейболиста:</td>
+        <td>Амплуа волейболиста:</td>
+        <td>Удалить данные о волейболисте:</td>
+      </table>
+    </section>
+  </div>
+</body>
+</html>
+<!-- C:\Users\Карповы\AppData\Local\Chromium\User Data\Default\databases -->
